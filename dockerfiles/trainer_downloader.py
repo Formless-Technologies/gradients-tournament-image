@@ -10,6 +10,7 @@ from huggingface_hub import snapshot_download
 from transformers import CLIPTokenizer
 from urllib.parse import urlparse
 from configs import trainer_constants as cst
+import configs.training_paths as train_paths
 import aiohttp
 
 
@@ -96,7 +97,7 @@ async def download_text_dataset(task_id, dataset_url, file_format, dataset_dir):
 
 async def download_image_dataset(dataset_zip_url, task_id, dataset_dir):
     os.makedirs(dataset_dir, exist_ok=True)
-    local_zip_path = f"{dataset_dir}/{task_id}.zip"
+    local_zip_path = train_paths.get_image_training_zip_save_path(task_id)
     print(f"Downloading dataset from: {dataset_zip_url}")
     local_path = await download_s3_file(dataset_zip_url, local_zip_path)
     print(f"Downloaded dataset to: {local_path}")
@@ -189,8 +190,8 @@ async def main():
     parser.add_argument("--file-format")
     args = parser.parse_args()
 
-    dataset_dir = f"/cache/{args.task_id}/datasets"
-    model_dir = f"/cache/{args.task_id}/models"
+    dataset_dir = cst.CACHE_DATASETS_DIR
+    model_dir = cst.CACHE_MODELS_DIR
     os.makedirs(dataset_dir, exist_ok=True)
     os.makedirs(model_dir, exist_ok=True)
 
@@ -201,14 +202,14 @@ async def main():
         dataset_zip_path = await download_image_dataset(args.dataset, args.task_id, dataset_dir)
         model_path = await download_base_model(args.model, model_dir)
         print("Downloading clip models", flush=True)
-        CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14", cache_dir="/cache/hf_cache")
-        CLIPTokenizer.from_pretrained("laion/CLIP-ViT-bigG-14-laion2B-39B-b160k", cache_dir="/cache/hf_cache")
+        CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14", cache_dir=cst.HUGGINGFACE_CACHE_PATH)
+        CLIPTokenizer.from_pretrained("laion/CLIP-ViT-bigG-14-laion2B-39B-b160k", cache_dir=cst.HUGGINGFACE_CACHE_PATH)
         snapshot_download(
             repo_id="google/t5-v1_1-xxl",
             repo_type="model",
-            local_dir="/cache/hf_cache/google--t5-v1_1-xxl",
+            cache_dir="/cache/hf_cache/",
             local_dir_use_symlinks=False,
-            allow_patterns=["tokenizer_config.json", "spiece.model", "special_tokens_map.json", "tokenizer.json"],
+            allow_patterns=["tokenizer_config.json", "spiece.model", "special_tokens_map.json", "config.json"],
         )
     else:
         dataset_path, _ = await download_text_dataset(args.task_id, args.dataset, args.file_format, dataset_dir)
