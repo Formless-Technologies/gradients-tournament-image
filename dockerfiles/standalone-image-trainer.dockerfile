@@ -14,7 +14,7 @@ RUN pip install aiohttp pydantic requests toml \
 RUN mkdir -p /dataset/configs \
     /dataset/outputs \
     /dataset/images \
-    /workspace/scripts \
+    /workspace/scripts
 
 COPY configs /workspace/scripts/configs
 COPY scripts /workspace/scripts
