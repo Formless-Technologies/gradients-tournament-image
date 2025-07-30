@@ -15,13 +15,11 @@ RUN mkdir -p /dataset/configs \
     /dataset/outputs \
     /dataset/images \
     /workspace/scripts \
+    /workspace/core
 
-ENV CONFIG_DIR="/dataset/configs"
-ENV OUTPUT_DIR="/dataset/outputs"
-ENV DATASET_DIR="/dataset/images"
-
-COPY configs/ /workspace/configs
-COPY training/ /workspace/training
+COPY core /workspace/core
+COPY miner /workspace/miner
+COPY trainer /workspace/trainer
 COPY scripts /workspace/scripts
 
 RUN chmod +x /workspace/scripts/run_image_trainer.sh
